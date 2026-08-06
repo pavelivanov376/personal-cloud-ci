@@ -1,0 +1,34 @@
+<mvc:View
+    controllerName="app.controller.Jobs"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    displayBlock="true">
+
+    <Page title="Jobs">
+        <headerContent>
+            <Button text="Add Job" type="Emphasized" icon="sap-icon://add" press=".onAddJob"/>
+        </headerContent>
+        <content>
+            <Table items="{jobs>/items}">
+                <columns>
+                    <Column><Text text="Name"/></Column>
+                    <Column><Text text="Repository"/></Column>
+                    <Column hAlign="End"><Text text="Actions"/></Column>
+                </columns>
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <Text text="{jobs>name}"/>
+                            <Text text="{jobs>repository/name}"/>
+                            <HBox justifyContent="End">
+                                <Button text="Build" type="Emphasized" icon="sap-icon://play" press=".onBuild" class="sapUiTinyMarginEnd"/>
+                                <Button type="Reject" icon="sap-icon://delete" press=".onDelete"/>
+                            </HBox>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </content>
+    </Page>
+
+</mvc:View>

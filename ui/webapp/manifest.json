@@ -6,10 +6,29 @@
   },
   "sap.ui5": {
     "rootView": {
-      "viewName": "app.view.Repositories",
+      "viewName": "app.view.App",
       "type": "XML",
       "async": true,
-      "id": "root"
+      "id": "app"
+    },
+    "routing": {
+      "config": {
+        "routerClass": "sap.m.routing.Router",
+        "type": "View",
+        "viewType": "XML",
+        "path": "app.view",
+        "controlId": "navContainer",
+        "controlAggregation": "pages",
+        "async": true
+      },
+      "routes": [
+        { "name": "repositories", "pattern": "", "target": "repositories" },
+        { "name": "jobs", "pattern": "jobs", "target": "jobs" }
+      ],
+      "targets": {
+        "repositories": { "id": "repositories", "name": "Repositories" },
+        "jobs": { "id": "jobs", "name": "Jobs" }
+      }
     }
   }
 }

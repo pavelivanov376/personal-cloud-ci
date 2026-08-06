@@ -1,0 +1,24 @@
+<mvc:View
+    controllerName="app.controller.App"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    displayBlock="true">
+
+    <App id="appPages">
+        <Page title="CI Cloud">
+            <IconTabHeader
+                id="iconTabHeader"
+                select=".onTabSelect"
+                selectedKey="{/selectedTab}">
+                <items>
+                    <IconTabFilter key="repositories" text="Repositories"/>
+                    <IconTabFilter key="jobs" text="Jobs"/>
+                </items>
+            </IconTabHeader>
+            <content>
+                <NavContainer id="navContainer"/>
+            </content>
+        </Page>
+    </App>
+
+</mvc:View>

@@ -4,30 +4,28 @@
     xmlns="sap.m"
     displayBlock="true">
 
-    <App>
-        <Page title="Repositories">
-            <headerContent>
-                <Button text="Add Repository" type="Emphasized" icon="sap-icon://add" press=".onAddRepository"/>
-            </headerContent>
-            <content>
-                <Table items="{repositories>/items}">
-                    <columns>
-                        <Column><Text text="Name"/></Column>
-                        <Column><Text text="URL"/></Column>
-                        <Column hAlign="End"><Text text="Actions"/></Column>
-                    </columns>
-                    <items>
-                        <ColumnListItem>
-                            <cells>
-                                <Text text="{repositories>name}"/>
-                                <Link text="{repositories>url}" href="{repositories>url}" target="_blank"/>
-                                <Button type="Reject" icon="sap-icon://delete" press=".onDelete"/>
-                            </cells>
-                        </ColumnListItem>
-                    </items>
-                </Table>
-            </content>
-        </Page>
-    </App>
+    <Page title="Repositories">
+        <headerContent>
+            <Button text="Add Repository" type="Emphasized" icon="sap-icon://add" press=".onAddRepository"/>
+        </headerContent>
+        <content>
+            <Table items="{repositories>/items}">
+                <columns>
+                    <Column><Text text="Name"/></Column>
+                    <Column><Text text="URL"/></Column>
+                    <Column hAlign="End"><Text text="Actions"/></Column>
+                </columns>
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <Text text="{repositories>name}"/>
+                            <Link text="{repositories>url}" href="{repositories>url}" target="_blank"/>
+                            <Button type="Reject" icon="sap-icon://delete" press=".onDelete"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </content>
+    </Page>
 
 </mvc:View>

@@ -1,5 +1,7 @@
-package com.personal;
+package com.personal.controllers;
 
+import com.personal.entities.RepositoryEntity;
+import com.personal.repositories.RepositoryRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
