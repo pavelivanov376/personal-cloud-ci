@@ -1,0 +1,21 @@
+<mvc:View
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    controllerName="app.controller.Repositories">
+
+    <Table id="repoTable" items="{/repositories}" headerText="Repositories">
+        <columns>
+            <Column><Text text="Name"/></Column>
+            <Column><Text text="URL"/></Column>
+        </columns>
+        <items>
+            <ColumnListItem>
+                <cells>
+                    <Text text="{name}"/>
+                    <Text text="{url}"/>
+                </cells>
+            </ColumnListItem>
+        </items>
+    </Table>
+
+</mvc:View>

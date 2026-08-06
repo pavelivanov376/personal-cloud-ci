@@ -1,0 +1,15 @@
+{
+  "welcomeFile": "/index.html",
+  "authenticationMethod": "none",
+  "routes": [
+    {
+      "source": "/api/(.*)",
+      "target": "/api/$1",
+      "destination": "api-service"
+    },
+    {
+      "source": "/(.*)",
+      "localDir": "webapp"
+    }
+  ]
+}
