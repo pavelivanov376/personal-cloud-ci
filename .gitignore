@@ -1,0 +1,12 @@
+# Node
+ui/node_modules/
+
+# Maven
+api-service/target/
+
+# IDE
+.idea/
+*.iml
+
+# Docker
+docker-compose.override.yml

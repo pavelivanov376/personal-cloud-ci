@@ -1,21 +1,33 @@
 <mvc:View
+    controllerName="app.controller.Repositories"
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
-    controllerName="app.controller.Repositories">
+    displayBlock="true">
 
-    <Table id="repoTable" items="{/repositories}" headerText="Repositories">
-        <columns>
-            <Column><Text text="Name"/></Column>
-            <Column><Text text="URL"/></Column>
-        </columns>
-        <items>
-            <ColumnListItem>
-                <cells>
-                    <Text text="{name}"/>
-                    <Text text="{url}"/>
-                </cells>
-            </ColumnListItem>
-        </items>
-    </Table>
+    <App>
+        <Page title="Repositories">
+            <headerContent>
+                <Button text="Add Repository" type="Emphasized" icon="sap-icon://add" press=".onAddRepository"/>
+            </headerContent>
+            <content>
+                <Table items="{repositories>/items}">
+                    <columns>
+                        <Column><Text text="Name"/></Column>
+                        <Column><Text text="URL"/></Column>
+                        <Column hAlign="End"><Text text="Actions"/></Column>
+                    </columns>
+                    <items>
+                        <ColumnListItem>
+                            <cells>
+                                <Text text="{repositories>name}"/>
+                                <Link text="{repositories>url}" href="{repositories>url}" target="_blank"/>
+                                <Button type="Reject" icon="sap-icon://delete" press=".onDelete"/>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+            </content>
+        </Page>
+    </App>
 
 </mvc:View>
