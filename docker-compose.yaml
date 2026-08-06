@@ -11,7 +11,7 @@ services:
       - pg_data:/var/lib/postgresql/data
 
   api-service:
-    build: ./api-service
+    build: ./front-end/api-service
     ports:
       - "8080:8080"
     environment:
@@ -22,7 +22,7 @@ services:
       - db
 
   ui:
-    build: ./ui
+    build: ./front-end/ui
     ports:
       - "5001:5000"
     environment:
@@ -31,7 +31,7 @@ services:
       - api-service
 
   gear:
-    build: ./gear
+    build: ./front-end/gear
     ports:
       - "8081:8081"
     environment:
