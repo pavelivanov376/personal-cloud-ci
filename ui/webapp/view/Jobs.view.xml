@@ -9,14 +9,14 @@
             <Button text="Add Job" type="Emphasized" icon="sap-icon://add" press=".onAddJob"/>
         </headerContent>
         <content>
-            <Table items="{jobs>/items}">
+            <Table items="{jobs>/items}" itemPress=".onJobSelect" mode="SingleSelectMaster">
                 <columns>
                     <Column><Text text="Name"/></Column>
                     <Column><Text text="Repository"/></Column>
                     <Column hAlign="End"><Text text="Actions"/></Column>
                 </columns>
                 <items>
-                    <ColumnListItem>
+                    <ColumnListItem type="Active">
                         <cells>
                             <Text text="{jobs>name}"/>
                             <Text text="{jobs>repository/name}"/>

@@ -1,0 +1,29 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+
+    <Dialog id="buildsDialog" title="Builds" contentWidth="600px">
+        <content>
+            <Table items="{builds>/items}">
+                <columns>
+                    <Column><Text text="#"/></Column>
+                    <Column><Text text="Timestamp"/></Column>
+                    <Column><Text text="Status"/></Column>
+                </columns>
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <Text text="{builds>buildNumber}"/>
+                            <Text text="{builds>timestamp}"/>
+                            <Text text="{builds>status}"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </content>
+        <endButton>
+            <Button text="Close" press=".onCloseBuilds"/>
+        </endButton>
+    </Dialog>
+
+</core:FragmentDefinition>

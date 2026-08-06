@@ -23,6 +23,26 @@ sap.ui.define([
                 .then(data => this.getView().getModel("jobs").setProperty("/items", data));
         },
 
+        onJobSelect: function (event) {
+            const item = event.getParameter("listItem").getBindingContext("jobs").getObject();
+            const openDialog = d => {
+                fetch("/api/builds/jobs/" + item.id)
+                    .then(r => r.json())
+                    .then(builds => {
+                        d.setModel(new JSONModel({ items: builds }), "builds");
+                        d.open();
+                    });
+            };
+            if (!this._buildsDialog) {
+                this._buildsDialog = this.loadFragment({ name: "app.view.BuildsDialog" });
+            }
+            this._buildsDialog.then(openDialog);
+        },
+
+        onCloseBuilds: function () {
+            this.byId("buildsDialog").close();
+        },
+
         onAddJob: function () {
             const open = d => {
                 const select = this.byId("repositorySelect");
@@ -33,7 +53,6 @@ sap.ui.define([
                     .then(repos => repos.forEach(r => select.addItem(new Item({ key: r.id, text: r.name }))));
                 d.open();
             };
-
             if (!this._dialog) {
                 this._dialog = this.loadFragment({ name: "app.view.AddJobDialog" });
             }
@@ -73,7 +92,7 @@ sap.ui.define([
             const item = event.getSource().getBindingContext("jobs").getObject();
             fetch("/api/builds/jobs/" + item.id, { method: "POST" })
                 .then(r => r.json())
-                .then(() => { MessageToast.show("Build started"); this._load(); })
+                .then(() => { MessageToast.show("Build queued"); this._load(); })
                 .catch(() => MessageBox.error("Could not start build"));
         },
 

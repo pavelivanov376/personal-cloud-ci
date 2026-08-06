@@ -22,12 +22,12 @@
         "async": true
       },
       "routes": [
-        { "name": "repositories", "pattern": "", "target": "repositories" },
-        { "name": "jobs", "pattern": "jobs", "target": "jobs" }
+        { "name": "repositories", "pattern": "",     "target": "repositories" },
+        { "name": "jobs",         "pattern": "jobs", "target": "jobs" }
       ],
       "targets": {
         "repositories": { "id": "repositories", "name": "Repositories" },
-        "jobs": { "id": "jobs", "name": "Jobs" }
+        "jobs":         { "id": "jobs",         "name": "Jobs" }
       }
     }
   }
