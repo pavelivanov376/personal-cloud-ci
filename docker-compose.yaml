@@ -41,5 +41,13 @@ services:
     depends_on:
       - db
 
+  build-syncer:
+    build: ./back-end/build-syncer
+    environment:
+      GEAR_URL: http://gear:8081
+      POLL_INTERVAL: 10s
+    depends_on:
+      - gear
+
 volumes:
   pg_data:
