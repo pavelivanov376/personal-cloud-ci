@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: build-syncer
+  namespace: cicloud
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: build-syncer
+  template:
+    metadata:
+      labels:
+        app: build-syncer
+    spec:
+      containers:
+        - name: build-syncer
+          image: personalcicloud/build-syncer:local
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: GEAR_URL
+              value: http://gear:8081
+            - name: POLL_INTERVAL
+              value: 10s
