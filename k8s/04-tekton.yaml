@@ -2,6 +2,7 @@ apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   name: git-clone
+  namespace: cicloud
 spec:
   params:
     - name: url
@@ -34,6 +35,7 @@ apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   name: maven-build
+  namespace: cicloud
 spec:
   workspaces:
     - name: source
@@ -54,6 +56,7 @@ apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
   name: spring-pipeline
+  namespace: cicloud
 spec:
   workspaces:
     - name: source
@@ -93,31 +96,3 @@ spec:
       workspaces:
         - name: source
           workspace: source
-
----
----
-apiVersion: tekton.dev/v1
-kind: PipelineRun
-metadata:
-  name: spring-build-run-5
-spec:
-  pipelineRef:
-    name: spring-pipeline
-
-  params:
-    - name: git-url
-      value: https://github.com/pavelivanov376/ci-cd-service
-
-    - name: git-revision
-      value: main
-
-  workspaces:
-    - name: source
-      volumeClaimTemplate:
-        spec:
-          accessModes:
-            - ReadWriteOnce
-          storageClassName: hostpath
-          resources:
-            requests:
-              storage: 1Gi
