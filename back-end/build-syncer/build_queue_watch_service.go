@@ -25,10 +25,10 @@ type Build struct {
 }
 
 // The Kubernetes resource we create per queued build.
-var pipelineRunGVR = schema.GroupVersionResource{
-	Group:    "steward.sap.com",
+var segtonPipelineRunGVR = schema.GroupVersionResource{
+	Group:    "segton.sap.com",
 	Version:  "v1alpha1",
-	Resource: "pipelineruns",
+	Resource: "segtonpipelineruns",
 }
 
 // BuildQueueWatchService polls gear for queued builds and creates a
@@ -59,10 +59,10 @@ func (s *BuildQueueWatchService) Tick(ctx context.Context) {
 		}
 		log.Printf("build: id=%s number=%d repo=%s", b.ID, b.BuildNumber, b.RepositoryUrl)
 		if err := s.createPipelineRun(ctx, b); err != nil {
-			log.Printf("failed to create PipelineRun for build %s: %v", b.ID, err)
+			log.Printf("failed to create SegtonPipelineRun for build %s: %v", b.ID, err)
 			continue
 		}
-		log.Printf("created PipelineRun build-%s", b.ID)
+		log.Printf("created SegtonPipelineRun build-%s", b.ID)
 	}
 }
 
@@ -102,13 +102,13 @@ func (s *BuildQueueWatchService) fetchBuild(id string) (*Build, error) {
 	return &b, nil
 }
 
-// Create a PipelineRun custom resource in Kubernetes. If it already exists,
-// do nothing (so re-polling the same build is safe).
+// Create a SegtonPipelineRun custom resource in Kubernetes. If it already
+// exists, do nothing (so re-polling the same build is safe).
 func (s *BuildQueueWatchService) createPipelineRun(ctx context.Context, b *Build) error {
 	pr := &unstructured.Unstructured{
 		Object: map[string]interface{}{
-			"apiVersion": "steward.sap.com/v1alpha1",
-			"kind":       "PipelineRun",
+			"apiVersion": "segton.sap.com/v1alpha1",
+			"kind":       "SegtonPipelineRun",
 			"metadata": map[string]interface{}{
 				"name": "build-" + b.ID,
 			},
@@ -121,7 +121,7 @@ func (s *BuildQueueWatchService) createPipelineRun(ctx context.Context, b *Build
 			},
 		},
 	}
-	_, err := s.k8s.Resource(pipelineRunGVR).Namespace(s.namespace).Create(ctx, pr, metav1.CreateOptions{})
+	_, err := s.k8s.Resource(segtonPipelineRunGVR).Namespace(s.namespace).Create(ctx, pr, metav1.CreateOptions{})
 	if errors.IsAlreadyExists(err) {
 		return nil
 	}

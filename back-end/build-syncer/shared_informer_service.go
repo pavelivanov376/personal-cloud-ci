@@ -12,8 +12,8 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-// SharedInformerService holds a persistent watch on PipelineRuns in a
-// namespace. When a PipelineRun changes, it reads its status and PATCHes
+// SharedInformerService holds a persistent watch on SegtonPipelineRuns in a
+// namespace. When a SegtonPipelineRun changes, it reads its status and PATCHes
 // gear's /builds/{id}/status endpoint.
 type SharedInformerService struct {
 	gearURL   string
@@ -28,19 +28,19 @@ func (s *SharedInformerService) Run(ctx context.Context) {
 	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(
 		s.k8s, 0, s.namespace, nil,
 	)
-	informer := factory.ForResource(pipelineRunGVR).Informer()
+	informer := factory.ForResource(segtonPipelineRunGVR).Informer()
 
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    func(obj interface{}) { s.handle(obj, "add") },
 		UpdateFunc: func(_, obj interface{}) { s.handle(obj, "update") },
 	})
 
-	log.Printf("shared-informer: watching PipelineRuns in namespace=%s", s.namespace)
+	log.Printf("shared-informer: watching SegtonPipelineRuns in namespace=%s", s.namespace)
 	factory.Start(ctx.Done())
 	<-ctx.Done()
 }
 
-// handle extracts (buildId, status) from a PipelineRun and forwards it to gear.
+// handle extracts (buildId, status) from a SegtonPipelineRun and forwards it to gear.
 func (s *SharedInformerService) handle(obj interface{}, event string) {
 	u := obj.(*unstructured.Unstructured)
 	buildID, _, _ := unstructured.NestedString(u.Object, "spec", "buildId")
@@ -49,7 +49,7 @@ func (s *SharedInformerService) handle(obj interface{}, event string) {
 		return
 	}
 
-	log.Printf("shared-informer: %s pipelinerun=%s buildId=%s status=%s",
+	log.Printf("shared-informer: %s segtonpipelinerun=%s buildId=%s status=%s",
 		event, u.GetName(), buildID, status)
 
 	if err := s.updateBuildStatus(buildID, status); err != nil {

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 docker context use desktop-linux
+# Initially we install Tekton once: kubectl apply --filename https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml
 
 docker build -t personalcicloud/api-service:local  ./front-end/api-service
 docker build -t personalcicloud/gear:local         ./front-end/gear
