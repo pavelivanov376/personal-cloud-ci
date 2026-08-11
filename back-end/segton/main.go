@@ -17,7 +17,8 @@ func getenv(key, def string) string {
 }
 
 func main() {
-	namespace := getenv("NAMESPACE", "cicloud")
+	segtonNamespace := getenv("SEGTON_NAMESPACE", "cicloud")
+	pipelineNamespace := getenv("PIPELINE_NAMESPACE", "tekton-custom-resources")
 	pipelineName := getenv("PIPELINE_NAME", "spring-pipeline")
 
 	// Talk to the Kubernetes API using the pod's ServiceAccount.
@@ -31,16 +32,18 @@ func main() {
 	}
 
 	forward := &SegtonPipelineRunWatchService{
-		k8s:          k8s,
-		namespace:    namespace,
-		pipelineName: pipelineName,
+		k8s:               k8s,
+		segtonNamespace:   segtonNamespace,
+		pipelineNamespace: pipelineNamespace,
+		pipelineName:      pipelineName,
 	}
 	reverse := &TektonPipelineRunWatchService{
-		k8s:       k8s,
-		namespace: namespace,
+		k8s:             k8s,
+		segtonNamespace: segtonNamespace,
 	}
 
-	log.Printf("segton starting: namespace=%s pipeline=%s", namespace, pipelineName)
+	log.Printf("segton starting: segton-ns=%s pipeline-ns=%s pipeline=%s",
+		segtonNamespace, pipelineNamespace, pipelineName)
 
 	ctx := context.Background()
 	go forward.Run(ctx)

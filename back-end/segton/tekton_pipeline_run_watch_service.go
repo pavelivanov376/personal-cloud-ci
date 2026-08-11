@@ -13,18 +13,19 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-// TektonPipelineRunWatchService watches Tekton PipelineRuns and, when one
-// created by us changes, mirrors its Succeeded condition back onto the
-// owning SegtonPipelineRun's spec.status.
+// TektonPipelineRunWatchService watches Tekton PipelineRuns cluster-wide
+// (they now live in per-build namespaces segton-run-<buildId>). When one
+// that carries our owner label changes, it mirrors the Succeeded condition
+// back onto the owning SegtonPipelineRun's spec.status in segtonNamespace.
 type TektonPipelineRunWatchService struct {
-	k8s       dynamic.Interface
-	namespace string
+	k8s             dynamic.Interface
+	segtonNamespace string
 }
 
 func (s *TektonPipelineRunWatchService) Run(ctx context.Context) {
-	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(
-		s.k8s, 0, s.namespace, nil,
-	)
+	// Cluster-wide informer — a per-build namespace can't be watched
+	// individually because it doesn't exist yet at startup.
+	factory := dynamicinformer.NewDynamicSharedInformerFactory(s.k8s, 0)
 	informer := factory.ForResource(tektonPipelineRunGVR).Informer()
 
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -32,7 +33,7 @@ func (s *TektonPipelineRunWatchService) Run(ctx context.Context) {
 		UpdateFunc: func(_, obj interface{}) { s.handle(ctx, obj) },
 	})
 
-	log.Printf("segton-reverse: watching Tekton PipelineRuns in namespace=%s", s.namespace)
+	log.Printf("segton-reverse: watching Tekton PipelineRuns cluster-wide")
 	factory.Start(ctx.Done())
 	<-ctx.Done()
 }
@@ -40,8 +41,8 @@ func (s *TektonPipelineRunWatchService) Run(ctx context.Context) {
 func (s *TektonPipelineRunWatchService) handle(ctx context.Context, obj interface{}) {
 	u := obj.(*unstructured.Unstructured)
 
-	// Only react to Tekton PipelineRuns we created (owned by a SegtonPipelineRun).
-	ownerName := findSegtonOwner(u)
+	// Only react to Tekton PipelineRuns we created (identified by our owner label).
+	ownerName := u.GetLabels()[ownerLabel]
 	if ownerName == "" {
 		return
 	}
@@ -53,7 +54,7 @@ func (s *TektonPipelineRunWatchService) handle(ctx context.Context, obj interfac
 
 	// Read the current SegtonPipelineRun.spec.status; skip if it already matches
 	// (avoids an infinite update echo through the informer).
-	current, err := s.k8s.Resource(segtonPipelineRunGVR).Namespace(s.namespace).Get(ctx, ownerName, metav1.GetOptions{})
+	current, err := s.k8s.Resource(segtonPipelineRunGVR).Namespace(s.segtonNamespace).Get(ctx, ownerName, metav1.GetOptions{})
 	if err != nil {
 		log.Printf("segton-reverse: failed to get segton-plr %s: %v", ownerName, err)
 		return
@@ -67,24 +68,13 @@ func (s *TektonPipelineRunWatchService) handle(ctx context.Context, obj interfac
 	patch, _ := json.Marshal(map[string]interface{}{
 		"spec": map[string]interface{}{"status": projectStatus},
 	})
-	_, err = s.k8s.Resource(segtonPipelineRunGVR).Namespace(s.namespace).
+	_, err = s.k8s.Resource(segtonPipelineRunGVR).Namespace(s.segtonNamespace).
 		Patch(ctx, ownerName, types.MergePatchType, patch, metav1.PatchOptions{})
 	if err != nil {
 		log.Printf("segton-reverse: failed to patch segton-plr %s: %v", ownerName, err)
 		return
 	}
 	log.Printf("segton-reverse: %s %s → %s", ownerName, currentStatus, projectStatus)
-}
-
-// findSegtonOwner returns the name of the SegtonPipelineRun that owns this
-// Tekton PipelineRun, or "" if none.
-func findSegtonOwner(u *unstructured.Unstructured) string {
-	for _, ref := range u.GetOwnerReferences() {
-		if ref.Kind == "SegtonPipelineRun" {
-			return ref.Name
-		}
-	}
-	return ""
 }
 
 // tektonConditionToProjectStatus reads status.conditions[type=Succeeded] and

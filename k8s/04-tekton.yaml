@@ -2,7 +2,7 @@ apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   name: git-clone
-  namespace: cicloud
+  namespace: tekton-custom-resources
 spec:
   params:
     - name: url
@@ -35,7 +35,7 @@ apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   name: maven-build
-  namespace: cicloud
+  namespace: tekton-custom-resources
 spec:
   workspaces:
     - name: source
@@ -56,7 +56,7 @@ apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
   name: spring-pipeline
-  namespace: cicloud
+  namespace: tekton-custom-resources
 spec:
   workspaces:
     - name: source
@@ -73,7 +73,14 @@ spec:
 
     - name: clone
       taskRef:
-        name: git-clone
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: git-clone
+          - name: namespace
+            value: tekton-custom-resources
 
       params:
         - name: url
@@ -91,7 +98,14 @@ spec:
         - clone
 
       taskRef:
-        name: maven-build
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: maven-build
+          - name: namespace
+            value: tekton-custom-resources
 
       workspaces:
         - name: source

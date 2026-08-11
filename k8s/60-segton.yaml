@@ -4,6 +4,7 @@ metadata:
   name: segton
   namespace: cicloud
 ---
+# Namespace-scoped: read + patch SegtonPipelineRuns in cicloud.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -13,9 +14,6 @@ rules:
   - apiGroups: ["segton.sap.com"]
     resources: ["segtonpipelineruns"]
     verbs: ["get", "list", "watch", "patch"]
-  - apiGroups: ["tekton.dev"]
-    resources: ["pipelineruns"]
-    verbs: ["get", "list", "watch", "create"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -28,6 +26,33 @@ subjects:
     namespace: cicloud
 roleRef:
   kind: Role
+  name: segton
+  apiGroup: rbac.authorization.k8s.io
+---
+# Cluster-scoped: create namespaces (segton-run-*) and Tekton PipelineRuns
+# in arbitrary namespaces, plus watch them cluster-wide.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: segton
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "create"]
+  - apiGroups: ["tekton.dev"]
+    resources: ["pipelineruns"]
+    verbs: ["get", "list", "watch", "create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: segton
+subjects:
+  - kind: ServiceAccount
+    name: segton
+    namespace: cicloud
+roleRef:
+  kind: ClusterRole
   name: segton
   apiGroup: rbac.authorization.k8s.io
 ---
@@ -52,7 +77,9 @@ spec:
           image: personalcicloud/segton:local
           imagePullPolicy: IfNotPresent
           env:
-            - name: NAMESPACE
+            - name: SEGTON_NAMESPACE
               value: cicloud
+            - name: PIPELINE_NAMESPACE
+              value: tekton-custom-resources
             - name: PIPELINE_NAME
               value: spring-pipeline
