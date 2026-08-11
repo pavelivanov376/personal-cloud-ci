@@ -35,7 +35,13 @@ func main() {
 		log.Fatalf("kubernetes client: %v", err)
 	}
 
-	svc := &BuildQueueWatchService{
+	queueSvc := &BuildQueueWatchService{
+		gearURL:   gearURL,
+		k8s:       k8s,
+		namespace: namespace,
+	}
+
+	informerSvc := &SharedInformerService{
 		gearURL:   gearURL,
 		k8s:       k8s,
 		namespace: namespace,
@@ -43,10 +49,15 @@ func main() {
 
 	log.Printf("build-syncer starting: gear=%s interval=%s namespace=%s", gearURL, interval, namespace)
 
-	// Poll once immediately, then every `interval`.
 	ctx := context.Background()
-	svc.Tick(ctx)
+
+	// Start the shared informer in the background — it opens a long-lived
+	// watch on PipelineRuns and pushes status changes back to gear.
+	go informerSvc.Run(ctx)
+
+	// Poll gear for queued builds once immediately, then every `interval`.
+	queueSvc.Tick(ctx)
 	for range time.Tick(interval) {
-		svc.Tick(ctx)
+		queueSvc.Tick(ctx)
 	}
 }
