@@ -25,12 +25,19 @@ sap.ui.define([
 
         onJobSelect: function (event) {
             const item = event.getParameter("listItem").getBindingContext("jobs").getObject();
+            this._buildsJobId = item.id;
             const openDialog = d => {
+                const refresh = () => {
+                    fetch("/api/builds/jobs/" + this._buildsJobId)
+                        .then(r => r.json())
+                        .then(builds => d.getModel("builds").setProperty("/items", builds));
+                };
                 fetch("/api/builds/jobs/" + item.id)
                     .then(r => r.json())
                     .then(builds => {
                         d.setModel(new JSONModel({ items: builds }), "builds");
                         d.open();
+                        this._buildsRefresh = setInterval(refresh, 1000);
                     });
             };
             if (!this._buildsDialog) {
@@ -40,6 +47,7 @@ sap.ui.define([
         },
 
         onCloseBuilds: function () {
+            clearInterval(this._buildsRefresh);
             this.byId("buildsDialog").close();
         },
 
