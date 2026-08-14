@@ -1,0 +1,39 @@
+{{- /*
+This file mixes two templating layers that share the same delimiters:
+  - Helm variables (.Values.x) are rendered on `helm install`, before the cluster.
+  - Kyverno expressions (element.resources...) must survive Helm untouched and be
+    evaluated in-cluster at admission time.
+Kyverno expressions are wrapped in Helm backtick-literal blocks below so Helm emits
+them verbatim instead of trying to execute them. This is a Helm template comment
+({{- /* ... *​/ -}}), which — unlike a YAML # comment — Helm strips before parsing,
+so it can safely describe the delimiters without triggering them.
+*/ -}}
+apiVersion: kyverno.io/v1
+kind: Policy
+metadata:
+  name: require-memory-limit-max-2gi
+  namespace: {{ .Values.namespaces.app }}
+spec:
+  validationFailureAction: Audit      # report, don't block
+  background: true                     # also scan existing pods, not just new ones
+  rules:
+    - name: memory-limit-required-and-capped
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+      validate:
+        message: "Every container must set resources.limits.memory and it must not exceed 2Gi."
+        foreach:
+          - list: "request.object.spec.containers"
+            deny:
+              conditions:
+                any:
+                  # fail if no memory limit is set...
+                  - key: {{ `"{{ element.resources.limits.memory || '' }}"` }}
+                    operator: Equals
+                    value: ""
+                  # ...or if the limit exceeds 2Gi
+                  - key: {{ `"{{ element.resources.limits.memory }}"` }}
+                    operator: GreaterThan
+                    value: "2Gi"

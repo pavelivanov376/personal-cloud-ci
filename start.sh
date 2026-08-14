@@ -2,6 +2,7 @@
 
 docker context use desktop-linux
 # Initially we install Tekton once: kubectl apply --filename https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml
+# As well as Kyverno: kubectl create -f https://github.com/kyverno/kyverno/releases/download/v1.13.4/install.yaml
 
 docker build -t personalcicloud/api-service:local  ./front-end/api-service
 docker build -t personalcicloud/gear:local         ./front-end/gear
