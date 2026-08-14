@@ -1,0 +1,70 @@
+# Bumped by start.sh on every deploy (--set rollDate=...) so `helm upgrade`
+# always rolls the app Deployments — the Helm equivalent of `rollout restart`.
+# Left empty here; templates fall back to `now` if unset.
+rollDate: ""
+
+namespaces:
+  app: cicloud
+  tekton: tekton-custom-resources
+
+db:
+  image: postgres:16
+  storage: 1Gi
+  port: 5432
+  credentials:
+    user: postgres
+    password: postgres
+    database: cicd
+
+apiService:
+  image:
+    repository: personalcicloud/api-service
+    tag: local
+    pullPolicy: IfNotPresent
+  replicas: 1
+  port: 8080
+
+gear:
+  image:
+    repository: personalcicloud/gear
+    tag: local
+    pullPolicy: IfNotPresent
+  replicas: 1
+  port: 8081
+
+ui:
+  image:
+    repository: personalcicloud/ui
+    tag: local
+    pullPolicy: IfNotPresent
+  replicas: 1
+  port: 5000
+  nodePort: 30500
+  destinations: '[{"name":"api-service","url":"http://api-service:8080"}]'
+
+buildSyncer:
+  image:
+    repository: personalcicloud/build-syncer
+    tag: local
+    pullPolicy: IfNotPresent
+  replicas: 1
+  env:
+    gearUrl: http://gear:8081
+    pollInterval: 10s
+    pipelineRunNamespace: cicloud
+
+segton:
+  image:
+    repository: personalcicloud/segton
+    tag: local
+    pullPolicy: IfNotPresent
+  replicas: 1
+  env:
+    segtonNamespace: cicloud
+    pipelineNamespace: tekton-custom-resources
+    pipelineName: spring-pipeline
+
+tekton:
+  gitImage: alpine/git:latest
+  mavenImage: maven:3.9-eclipse-temurin-25
+  defaultRevision: main

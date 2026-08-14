@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: build-syncer
+  namespace: {{ .Values.namespaces.app }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: build-syncer
+  namespace: {{ .Values.namespaces.app }}
+rules:
+  - apiGroups: ["segton.sap.com"]
+    resources: ["segtonpipelineruns"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: build-syncer
+  namespace: {{ .Values.namespaces.app }}
+subjects:
+  - kind: ServiceAccount
+    name: build-syncer
+    namespace: {{ .Values.namespaces.app }}
+roleRef:
+  kind: Role
+  name: build-syncer
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: build-syncer
+  namespace: {{ .Values.namespaces.app }}
+spec:
+  replicas: {{ .Values.buildSyncer.replicas }}
+  selector:
+    matchLabels:
+      app: build-syncer
+  template:
+    metadata:
+      labels:
+        app: build-syncer
+      annotations:
+        {{- include "cicloud.rollAnnotation" . | nindent 8 }}
+    spec:
+      serviceAccountName: build-syncer
+      containers:
+        - name: build-syncer
+          image: {{ .Values.buildSyncer.image.repository }}:{{ .Values.buildSyncer.image.tag }}
+          imagePullPolicy: {{ .Values.buildSyncer.image.pullPolicy }}
+          env:
+            - name: GEAR_URL
+              value: {{ .Values.buildSyncer.env.gearUrl }}
+            - name: POLL_INTERVAL
+              value: {{ .Values.buildSyncer.env.pollInterval | quote }}
+            - name: PIPELINERUN_NAMESPACE
+              value: {{ .Values.buildSyncer.env.pipelineRunNamespace }}

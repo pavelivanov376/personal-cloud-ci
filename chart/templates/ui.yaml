@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ui
+  namespace: {{ .Values.namespaces.app }}
+spec:
+  replicas: {{ .Values.ui.replicas }}
+  selector:
+    matchLabels:
+      app: ui
+  template:
+    metadata:
+      labels:
+        app: ui
+      annotations:
+        {{- include "cicloud.rollAnnotation" . | nindent 8 }}
+    spec:
+      containers:
+        - name: ui
+          image: {{ .Values.ui.image.repository }}:{{ .Values.ui.image.tag }}
+          imagePullPolicy: {{ .Values.ui.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.ui.port }}
+          env:
+            - name: destinations
+              value: {{ .Values.ui.destinations | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ui
+  namespace: {{ .Values.namespaces.app }}
+spec:
+  type: NodePort
+  selector:
+    app: ui
+  ports:
+    - name: http
+      port: {{ .Values.ui.port }}
+      targetPort: {{ .Values.ui.port }}
+      nodePort: {{ .Values.ui.nodePort }}

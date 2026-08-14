@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gear
+  namespace: {{ .Values.namespaces.app }}
+spec:
+  replicas: {{ .Values.gear.replicas }}
+  selector:
+    matchLabels:
+      app: gear
+  template:
+    metadata:
+      labels:
+        app: gear
+      annotations:
+        {{- include "cicloud.rollAnnotation" . | nindent 8 }}
+    spec:
+      containers:
+        - name: gear
+          image: {{ .Values.gear.image.repository }}:{{ .Values.gear.image.tag }}
+          imagePullPolicy: {{ .Values.gear.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.gear.port }}
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://db:{{ .Values.db.port }}/{{ .Values.db.credentials.database }}
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: POSTGRES_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: POSTGRES_PASSWORD
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gear
+  namespace: {{ .Values.namespaces.app }}
+spec:
+  selector:
+    app: gear
+  ports:
+    - name: http
+      port: {{ .Values.gear.port }}
+      targetPort: {{ .Values.gear.port }}

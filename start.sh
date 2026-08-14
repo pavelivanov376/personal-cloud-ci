@@ -9,19 +9,12 @@ docker build -t personalcicloud/ui:local           ./front-end/ui
 docker build -t personalcicloud/build-syncer:local ./back-end/build-syncer
 docker build -t personalcicloud/segton:local       ./back-end/segton
 
-kubectl apply -f k8s/
-
-kubectl -n cicloud rollout restart deployment/api-service
-kubectl -n cicloud rollout restart deployment/gear
-kubectl -n cicloud rollout restart deployment/ui
-kubectl -n cicloud rollout restart deployment/build-syncer
-kubectl -n cicloud rollout restart deployment/segton
-
-kubectl -n cicloud rollout status statefulset/db
-kubectl -n cicloud rollout status deployment/api-service
-kubectl -n cicloud rollout status deployment/gear
-kubectl -n cicloud rollout status deployment/ui
-kubectl -n cicloud rollout status deployment/build-syncer
-kubectl -n cicloud rollout status deployment/segton
+# One command installs/upgrades the whole stack. --set rollDate bumps a pod
+# annotation each run so the app Deployments always roll to pick up freshly
+# built :local images (the Helm equivalent of the old `rollout restart`).
+helm upgrade --install cicloud ./chart \
+  --namespace cicloud --create-namespace \
+  --set rollDate="$(date +%s)" \
+  --wait
 
 echo "UI: http://localhost:30500"
