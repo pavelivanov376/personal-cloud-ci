@@ -14,7 +14,7 @@ metadata:
   name: require-memory-limit-max-2gi
   namespace: {{ .Values.namespaces.app }}
 spec:
-  validationFailureAction: Audit      # report, don't block
+  validationFailureAction: Enforce
   background: true                     # also scan existing pods, not just new ones
   rules:
     - name: memory-limit-required-and-capped
@@ -37,3 +37,65 @@ spec:
                   - key: {{ `"{{ element.resources.limits.memory }}"` }}
                     operator: GreaterThan
                     value: "2Gi"
+---
+# Disallow the mutable :latest tag and untagged images
+apiVersion: kyverno.io/v1
+kind: Policy
+metadata:
+  name: disallow-latest-tag
+  namespace: {{ .Values.namespaces.app }}
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+    - name: require-explicit-non-latest-tag
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+      validate:
+        message: "Images must use an explicit tag other than ':latest'."
+        foreach:
+          - list: "request.object.spec.containers"
+            deny:
+              conditions:
+                any:
+                  # no tag at all (image has no ":")
+                  - key: {{ `"{{ regex_match('^[^:]+$', element.image) }}"` }}
+                    operator: Equals
+                    value: true
+                  # explicit :latest
+                  - key: {{ `"{{ regex_match('.*:latest$', element.image) }}"` }}
+                    operator: Equals
+                    value: true
+---
+# Require containers to declare runAsNonRoot=true at pod or container level.
+apiVersion: kyverno.io/v1
+kind: Policy
+metadata:
+  name: require-run-as-non-root
+  namespace: {{ .Values.namespaces.app }}
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+    - name: run-as-non-root-required
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+      validate:
+        message: "Containers must set securityContext.runAsNonRoot=true (at pod or container level)."
+        foreach:
+          - list: "request.object.spec.containers"
+            deny:
+              conditions:
+                all:
+                  # container does not opt in...
+                  - key: {{ `"{{ element.securityContext.runAsNonRoot || 'unset' }}"` }}
+                    operator: NotEquals
+                    value: true
+                  # ...and neither does the pod
+                  - key: {{ `"{{ request.object.spec.securityContext.runAsNonRoot || 'unset' }}"` }}
+                    operator: NotEquals
+                    value: true

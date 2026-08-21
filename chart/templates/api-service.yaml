@@ -21,6 +21,21 @@ spec:
           imagePullPolicy: {{ .Values.apiService.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.apiService.port }}
+          resources:
+            {{- toYaml .Values.apiService.resources | nindent 12 }}
+          # Actuator health groups: liveness = is the app alive, readiness = can it serve (DB up).
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: {{ .Values.apiService.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: {{ .Values.apiService.port }}
+            initialDelaySeconds: 20
+            periodSeconds: 10
           env:
             - name: SPRING_DATASOURCE_URL
               value: jdbc:postgresql://db:{{ .Values.db.port }}/{{ .Values.db.credentials.database }}
@@ -40,6 +55,8 @@ kind: Service
 metadata:
   name: api-service
   namespace: {{ .Values.namespaces.app }}
+  labels:
+    app: api-service   # ServiceMonitor.selector matches on the Service's own labels
 spec:
   selector:
     app: api-service

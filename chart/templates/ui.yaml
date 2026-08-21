@@ -21,6 +21,18 @@ spec:
           imagePullPolicy: {{ .Values.ui.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.ui.port }}
+          resources:
+            {{- toYaml .Values.ui.resources | nindent 12 }}
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.ui.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 15
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.ui.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
           env:
             - name: destinations
               value: {{ .Values.ui.destinations | quote }}

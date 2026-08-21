@@ -50,6 +50,16 @@ spec:
         - name: build-syncer
           image: {{ .Values.buildSyncer.image.repository }}:{{ .Values.buildSyncer.image.tag }}
           imagePullPolicy: {{ .Values.buildSyncer.image.pullPolicy }}
+          ports:
+            - name: metrics
+              containerPort: {{ .Values.buildSyncer.metricsPort }}
+          resources:
+            {{- toYaml .Values.buildSyncer.resources | nindent 12 }}
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.buildSyncer.metricsPort }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
           env:
             - name: GEAR_URL
               value: {{ .Values.buildSyncer.env.gearUrl }}
@@ -57,3 +67,18 @@ spec:
               value: {{ .Values.buildSyncer.env.pollInterval | quote }}
             - name: PIPELINERUN_NAMESPACE
               value: {{ .Values.buildSyncer.env.pipelineRunNamespace }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: build-syncer
+  namespace: {{ .Values.namespaces.app }}
+  labels:
+    app: build-syncer   # ServiceMonitor.selector matches on the Service's own labels
+spec:
+  selector:
+    app: build-syncer
+  ports:
+    - name: metrics
+      port: {{ .Values.buildSyncer.metricsPort }}
+      targetPort: metrics

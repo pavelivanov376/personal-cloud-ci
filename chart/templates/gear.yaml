@@ -21,6 +21,21 @@ spec:
           imagePullPolicy: {{ .Values.gear.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.gear.port }}
+          resources:
+            {{- toYaml .Values.gear.resources | nindent 12 }}
+          # Actuator health groups: liveness = is the app alive, readiness = can it serve (DB up).
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: {{ .Values.gear.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: {{ .Values.gear.port }}
+            initialDelaySeconds: 20
+            periodSeconds: 10
           env:
             - name: SPRING_DATASOURCE_URL
               value: jdbc:postgresql://db:{{ .Values.db.port }}/{{ .Values.db.credentials.database }}
@@ -40,6 +55,8 @@ kind: Service
 metadata:
   name: gear
   namespace: {{ .Values.namespaces.app }}
+  labels:
+    app: gear   # ServiceMonitor.selector matches on the Service's own labels
 spec:
   selector:
     app: gear

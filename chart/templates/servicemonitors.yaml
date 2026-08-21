@@ -1,0 +1,38 @@
+{{- /*
+One ServiceMonitor per scrapable service. A ServiceMonitor tells the
+kube-prometheus-stack Prometheus what to scrape:
+  - the `release` label must match Prometheus's serviceMonitorSelector
+    ({release: monitoring}) or Prometheus ignores it;
+  - namespaceSelector + selector pick the target Service (by its `app` label);
+  - endpoints names the Service port and the metrics path.
+ui (Node approuter) and db (Postgres) are intentionally omitted — nothing
+meaningful to scrape without extra exporters.
+*/ -}}
+{{- $targets := list
+  (dict "name" "api-service"  "port" "http"    "path" "/actuator/prometheus")
+  (dict "name" "gear"         "port" "http"    "path" "/actuator/prometheus")
+  (dict "name" "build-syncer" "port" "metrics" "path" "/metrics")
+  (dict "name" "segton"       "port" "metrics" "path" "/metrics")
+}}
+{{- range $t := $targets }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ $t.name }}
+  namespace: {{ $.Values.namespaces.app }}
+  labels:
+    # Must match Prometheus's serviceMonitorSelector, or it won't be scraped.
+    release: {{ $.Values.monitoring.releaseLabel }}
+spec:
+  namespaceSelector:
+    matchNames:
+      - {{ $.Values.namespaces.app }}
+  selector:
+    matchLabels:
+      app: {{ $t.name }}
+  endpoints:
+    - port: {{ $t.port }}
+      path: {{ $t.path }}
+      interval: 15s
+{{- end }}

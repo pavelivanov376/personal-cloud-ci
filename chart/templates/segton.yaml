@@ -78,6 +78,16 @@ spec:
         - name: segton
           image: {{ .Values.segton.image.repository }}:{{ .Values.segton.image.tag }}
           imagePullPolicy: {{ .Values.segton.image.pullPolicy }}
+          ports:
+            - name: metrics
+              containerPort: {{ .Values.segton.metricsPort }}
+          resources:
+            {{- toYaml .Values.segton.resources | nindent 12 }}
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.segton.metricsPort }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
           env:
             - name: SEGTON_NAMESPACE
               value: {{ .Values.segton.env.segtonNamespace }}
@@ -85,3 +95,18 @@ spec:
               value: {{ .Values.segton.env.pipelineNamespace }}
             - name: PIPELINE_NAME
               value: {{ .Values.segton.env.pipelineName }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: segton
+  namespace: {{ .Values.namespaces.app }}
+  labels:
+    app: segton   # ServiceMonitor.selector matches on the Service's own labels
+spec:
+  selector:
+    app: segton
+  ports:
+    - name: metrics
+      port: {{ .Values.segton.metricsPort }}
+      targetPort: metrics

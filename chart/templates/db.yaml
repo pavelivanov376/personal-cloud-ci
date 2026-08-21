@@ -45,6 +45,8 @@ spec:
           ports:
             - containerPort: {{ .Values.db.port }}
               name: postgres
+          resources:
+            {{- toYaml .Values.db.resources | nindent 12 }}
           envFrom:
             - secretRef:
                 name: db-credentials

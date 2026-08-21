@@ -49,6 +49,9 @@ func main() {
 
 	log.Printf("build-syncer starting: gear=%s interval=%s namespace=%s", gearURL, interval, namespace)
 
+	// Expose Prometheus metrics on :9090/metrics.
+	StartMetricsServer(":9090")
+
 	ctx := context.Background()
 
 	// Start the shared informer in the background — it opens a long-lived

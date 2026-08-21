@@ -7,6 +7,12 @@ namespaces:
   app: cicloud
   tekton: tekton-custom-resources
 
+# ServiceMonitors carry this as their `release` label so the kube-prometheus-stack
+# Prometheus (installed with release name `monitoring`) selects them. Must equal
+# that release name — see CLAUDE.md.
+monitoring:
+  releaseLabel: monitoring
+
 db:
   image: postgres:16
   storage: 1Gi
@@ -15,6 +21,12 @@ db:
     user: postgres
     password: postgres
     database: cicd
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
 
 apiService:
   image:
@@ -23,6 +35,12 @@ apiService:
     pullPolicy: IfNotPresent
   replicas: 1
   port: 8080
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
 
 gear:
   image:
@@ -31,6 +49,12 @@ gear:
     pullPolicy: IfNotPresent
   replicas: 1
   port: 8081
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
 
 ui:
   image:
@@ -41,6 +65,12 @@ ui:
   port: 5000
   nodePort: 30500
   destinations: '[{"name":"api-service","url":"http://api-service:8080"}]'
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
 
 buildSyncer:
   image:
@@ -48,10 +78,17 @@ buildSyncer:
     tag: local
     pullPolicy: IfNotPresent
   replicas: 1
+  metricsPort: 9090
   env:
     gearUrl: http://gear:8081
     pollInterval: 10s
     pipelineRunNamespace: cicloud
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
 
 segton:
   image:
@@ -59,10 +96,17 @@ segton:
     tag: local
     pullPolicy: IfNotPresent
   replicas: 1
+  metricsPort: 9090
   env:
     segtonNamespace: cicloud
     pipelineNamespace: tekton-custom-resources
     pipelineName: spring-pipeline
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
 
 tekton:
   gitImage: alpine/git:latest

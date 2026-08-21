@@ -45,6 +45,9 @@ func main() {
 	log.Printf("segton starting: segton-ns=%s pipeline-ns=%s pipeline=%s",
 		segtonNamespace, pipelineNamespace, pipelineName)
 
+	// Expose Prometheus metrics on :9090/metrics.
+	StartMetricsServer(":9090")
+
 	ctx := context.Background()
 	go forward.Run(ctx)
 	go reverse.Run(ctx)
